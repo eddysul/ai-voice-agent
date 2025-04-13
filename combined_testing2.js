@@ -46,10 +46,14 @@ async function transcribeAudio() {
 // Function to process text with Gemini AI
 async function processWithGemini(inputText) {
   try {
+    const systemInstruction = "Please respond in no more than 50 words.";
+    const fullPrompt = `${systemInstruction}\n\nUser: ${inputText}`;
+
     const response = await aiClient.models.generateContent({
       model: "gemini-2.0-flash",
-      contents: inputText,
+      contents: [{ role: "user", parts: [{ text: fullPrompt }] }],
     });
+
     const geminiResponse = response.text;
     console.log('Gemini AI Response:', geminiResponse);
     return geminiResponse;
@@ -59,22 +63,10 @@ async function processWithGemini(inputText) {
   }
 }
 
-// ⏱️ Helper function to trim text to ~20 seconds max speech
-function trimTextToDuration(text, maxSeconds = 20, wordsPerSecond = 2) {
-  const maxWords = maxSeconds * wordsPerSecond;
-  const words = text.split(/\s+/);
-  if (words.length <= maxWords) return text;
-  return words.slice(0, maxWords).join(' ') + '...';
-}
-
 // Function to convert text to speech
 async function convertTextToSpeech(text) {
-  // Limit response to ~20s of speech
-  const trimmedText = trimTextToDuration(text, 20, 2);
-  console.log(`🔊 Trimmed response to ${trimmedText.split(' ').length} words.`);
-
   const request = {
-    input: { text: trimmedText },
+    input: { text: text },
     voice: { languageCode: 'en-US', ssmlGender: 'NEUTRAL' },
     audioConfig: { audioEncoding: 'MP3' },
   };
