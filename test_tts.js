@@ -8,7 +8,7 @@ const client = new textToSpeech.TextToSpeechClient();
 
 async function quickStart() {
   const request = {
-    input: { text: 'Hello, this is a test of Google Text-to-Speech!' },
+    input: { text: 'Give me the top 3 indian restaurants in Manhattan, New York.' },
     voice: { languageCode: 'en-US', ssmlGender: 'NEUTRAL' },
     audioConfig: { audioEncoding: 'MP3' },
   };
