@@ -42,4 +42,19 @@
    ```bash
    set GOOGLE_APPLICATION_CREDENTIALS=C:\path\to\your\credentials-file.json
    ```
+
+## How to Test Basic Speech-to-Text -> Gemini AI -> Text-to-Speech 
+1. If you want to create a new recording and test (Create quicktime audio recording)
+   - Save audio recording
+   - Then, convert .m4a file to .wav file.
+     ```bash
+      brew install ffmpeg
+      ffmpeg -i <input-file.m4a> <output-file.wav>
+      ```
+   - Then, move output file to test_files directory
+   - In combined_testing.js, change file path to your new .wav audio file path.
+   - Then, run
+     ```bash
+      node combined_testing.js
+      ```
    
