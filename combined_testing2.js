@@ -63,10 +63,21 @@ async function processWithGemini(inputText) {
   }
 }
 
+// 🧼 Clean Gemini output for TTS
+function cleanForTTS(text) {
+  return text
+    .replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1')  // remove markdown *italic* or **bold**
+    .replace(/\*/g, '')                      // remove any stray asterisks
+    .replace(/\s+/g, ' ')                    // collapse multiple spaces
+    .trim();
+}
+
 // Function to convert text to speech
 async function convertTextToSpeech(text) {
+  const cleanedText = cleanForTTS(text);
+
   const request = {
-    input: { text: text },
+    input: { text: cleanedText },
     voice: { languageCode: 'en-US', ssmlGender: 'NEUTRAL' },
     audioConfig: { audioEncoding: 'MP3' },
   };
