@@ -12,3 +12,11 @@
 
    ```bash
    npm install express twilio google-cloud-speech google-cloud-text-to-speech body-parser
+   ```
+
+## Testing Gemini AI
+1. **Install Dependencies**:
+   ```bash
+   npm install @google/genai
+   node gemini.js
+   ```
