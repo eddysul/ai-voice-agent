@@ -20,3 +20,26 @@
    npm install @google/genai
    node gemini.js
    ```
+## How to Setup Google Credentials
+1. **Config Folder**:
+   In your main project directory, create a config folder and inside that folder put the credentials json file I provided.
+2. **.env and .gitignore update**:
+   Update .env file to add this line
+   ```bash
+   GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/credentials-file.json"
+   ```
+
+   Update .gitignore file to add this line
+   ```bash
+   config/*.json
+   ```
+3. **Export in Path**:
+   In terminal for Mac/Linux run
+   ```bash
+   export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/credentials-file.json"
+   ```
+   On Windows (Command Prompt):
+   ```bash
+   set GOOGLE_APPLICATION_CREDENTIALS=C:\path\to\your\credentials-file.json
+   ```
+   
