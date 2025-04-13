@@ -1,58 +1,18 @@
-// const express = require('express');
-// const VoiceResponse = require('twilio').twiml.VoiceResponse;
-
-// const app = express();
-// app.use(express.urlencoded({ extended: false }));
-
-// // Twilio will hit this when a call comes in
-// app.post('/incoming_call', (req, res) => {
-//   const twiml = new VoiceResponse();
-
-//   twiml.say('Start speaking. I will record this.');
-//   twiml.record({
-//     maxLength: 10,              // up to 10 seconds
-//     playBeep: true,
-//     timeout: 2,
-//     action: '/handle_recording',
-//     method: 'POST'
-//   });
-
-//   res.type('text/xml');
-//   res.send(twiml.toString());
-// });
-
-// // Twilio will hit this after the recording
-// app.post('/handle_recording', (req, res) => {
-//   const twiml = new VoiceResponse();
-//   twiml.say('Thanks! Goodbye.');
-//   twiml.hangup();
-
-//   console.log('📼 Recording URL:', req.body.RecordingUrl);
-//   console.log('🎙️ Recording SID:', req.body.RecordingSid);
-
-//   res.type('text/xml');
-//   res.send(twiml.toString());
-// });
-
-// // Start the server
-// app.listen(1337, () => {
-//   console.log('🎧 Twilio test server listening on port 1337');
-// });
 require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const ffmpeg = require('fluent-ffmpeg');
 const VoiceResponse = require('twilio').twiml.VoiceResponse;
 
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 
-// When Twilio receives a call
 app.post('/incoming_call', (req, res) => {
   const twiml = new VoiceResponse();
 
-  twiml.say('Start speaking. I will record this.');
+  twiml.say('Hi i am the AI Agent. Please leave a message. Your call will be recorded after this tone');
   twiml.record({
     maxLength: 10,
     playBeep: true,
@@ -65,7 +25,6 @@ app.post('/incoming_call', (req, res) => {
   res.send(twiml.toString());
 });
 
-// When Twilio finishes recording
 app.post('/handle_recording', (req, res) => {
   const twiml = new VoiceResponse();
   twiml.say('Thanks! Goodbye.');
@@ -74,17 +33,23 @@ app.post('/handle_recording', (req, res) => {
   const recordingUrl = req.body.RecordingUrl;
   const recordingSid = req.body.RecordingSid;
 
-  console.log('🎙️ New recording:', recordingSid);
+  console.log('🎙️ Recording SID:', recordingSid);
 
-  // Send TwiML response immediately
   res.type('text/xml');
   res.send(twiml.toString());
 
-  // ✅ Start downloading recording in background after short delay
   setTimeout(async () => {
     try {
-      const fullUrl = `${recordingUrl}.mp3`;
-      const response = await axios.get(fullUrl, {
+      const fullMp3Url = `${recordingUrl}.mp3`;
+      const outputDir = path.join(__dirname, 'output');
+      const tempMp3Path = path.join(outputDir, `${recordingSid}_temp.mp3`);
+      const finalWavPath = path.join(outputDir, `${recordingSid}.wav`);
+
+      // Ensure output dir exists
+      if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
+
+      // Download the .mp3 file to a temporary location
+      const response = await axios.get(fullMp3Url, {
         responseType: 'arraybuffer',
         auth: {
           username: process.env.TWILIO_ACCOUNT_SID,
@@ -92,20 +57,27 @@ app.post('/handle_recording', (req, res) => {
         }
       });
 
-      const outputDir = path.join(__dirname, 'output');
-      if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
+      fs.writeFileSync(tempMp3Path, response.data);
 
-      const outputPath = path.join(outputDir, `${recordingSid}.mp3`);
-      fs.writeFileSync(outputPath, response.data);
-      console.log(`✅ Saved to output/${recordingSid}.mp3`);
+      // Convert to .wav and then delete .mp3
+      ffmpeg(tempMp3Path)
+        .audioCodec('pcm_s16le')
+        .audioFrequency(48000)
+        .format('wav')
+        .on('end', () => {
+          fs.unlinkSync(tempMp3Path); // delete the temp .mp3
+          console.log(`✅ Saved WAV file: ${finalWavPath}`);
+        })
+        .on('error', err => {
+          console.error(`❌ Conversion failed for ${recordingSid}:`, err.message);
+        })
+        .save(finalWavPath);
     } catch (err) {
-      console.error(`❌ Failed to save recording ${recordingSid}:`, err.message);
+      console.error(`❌ Error downloading or converting recording:`, err.message);
     }
-  }, 2500); // Give Twilio time to process the recording
+  }, 2500); // Delay to allow Twilio time to finish processing
 });
 
-// Start server
 app.listen(1337, () => {
-  console.log('🎧 Twilio record server running on port 1337');
+  console.log('🎧 Twilio server running on port 1337');
 });
-
