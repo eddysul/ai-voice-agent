@@ -40,17 +40,5 @@ This project demonstrates a scalable voice interaction system that integrates mu
 
 ---
 
-## 📌 Notes
-
-- Currently optimized for **local development** using ngrok.
-- Production deployment would require hosting the backend on a public server with HTTPS endpoints.
-
----
-
-## 🔗 References
-
-- [Twilio Voice API](https://www.twilio.com/docs/voice)
-- [Google Cloud Speech-to-Text](https://cloud.google.com/speech-to-text)
-- [Gemini API Documentation](https://developers.google.com/gemini)
 
 ---
